@@ -1,79 +1,180 @@
 ﻿import axios from 'axios';
 
-// Usar proxy de Vite
 const API_URL = '/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor para DEBUG
+// Interceptor para debugging
 api.interceptors.request.use(
   (config) => {
     console.log(`➡️ ${config.method.toUpperCase()} ${config.url}`);
     return config;
   },
-  (error) => {
-    console.error('❌ Request error:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Interceptor para DEBUG
 api.interceptors.response.use(
   (response) => {
     console.log(`✅ ${response.status}:`, response.data);
     return response;
   },
   (error) => {
-    console.error('❌ Response error:', error.response?.data || error.message);
+    console.error('❌ Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
 
 export default api;
 
-// ✅ Exportar TODOS los servicios que necesitamos
+// ==================== AUTH ====================
 export const authService = {
-  login: (credentials) => api.post('/auth/login', credentials),
+  login: async (credentials) => {
+    const response = await api.post('/auth/login', credentials);
+    // Respuesta esperada: { status, usuario, message }
+    return response.data; // contiene usuario, status, message
+  },
   checkUsers: () => api.get('/auth/check-users'),
 };
 
+// ==================== ADMIN ====================
 export const adminService = {
-  getDashboard: () => api.get('/admin/dashboard'),
-  getUsers: () => api.get('/admin/usuarios'),
-  getUser: (id) => api.get(`/admin/usuarios/${id}`),
-};
+  getDashboard: async () => {
+    const response = await api.get('/admin/dashboard');
+    // Se espera un objeto con estadísticas
+    return response.data;
+  },
+  getUsers: async () => {
+    const response = await api.get('/admin/usuarios');
+    // Suponemos que devuelve array directamente (como en /admin/horarios)
+    return response.data; // array de usuarios
+  },
+  getUser: async (id) => {
+    const response = await api.get(`/admin/usuarios/${id}`);
+    return response.data; // objeto usuario
+  },
+  // NUEVO: crear usuario
+    crearUsuario: async (data) => {
+      const response = await api.post('/admin/usuarios', data);
+      return response.data;
+    },
+    // NUEVO: actualizar usuario
+    actualizarUsuario: async (id, data) => {
+      const response = await api.put(`/admin/usuarios/${id}`, data);
+      return response.data;
+    },
+    // NUEVO: eliminar usuario
+    eliminarUsuario: async (id) => {
+      const response = await api.delete(`/admin/usuarios/${id}`);
+      return response.data;
+    },
+  };
 
+// ==================== TRABAJADOR ====================
 export const workerService = {
-  getClockHistory: (userId) => api.get(`/trabajador/historial/${userId}`),
-  getWeeklySummary: (userId) => api.get(`/trabajador/resumen/${userId}`),
+  getClockHistory: async (usuarioId) => {
+    // Este endpoint puede que ya no exista si lo eliminaste.
+    // Si no lo necesitas, puedes eliminarlo o dejarlo comentado.
+    // Por ahora, lo dejamos pero asegúrate de que el backend tenga el endpoint o lo comentes.
+    const response = await api.get(`/trabajador/historial/${usuarioId}`);
+    return response.data.registrosHoy || response.data.registros || response.data || [];
+  },
+  getWeeklySummary: async (usuarioId) => {
+    const response = await api.get(`/trabajador/resumen/${usuarioId}`);
+    return response.data;
+  },
+  getFullHistory: async (usuarioId) => {   // ✅ MOVIDO AQUÍ
+    const response = await api.get(`/trabajador/historial/completo/${usuarioId}`);
+    return response.data.registros || [];
+  },
 };
 
+// ==================== JUSTIFICANTES ====================
 export const justificantesService = {
-  solicitar: (data) => api.post('/justificantes/solicitar', data),
-  getByUsuario: (usuarioId) => api.get(`/justificantes/usuario/${usuarioId}`),
-  getPendientes: () => api.get('/justificantes/admin/pendientes'),
-  aprobarRechazar: (id, data) => api.put(`/justificantes/admin/${id}`, data),
+  solicitar: async (formData) => {
+      const response = await api.post('/justificantes/solicitar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    },
+  // Si el backend devuelve { status, justificantes }
+  getPendientes: async () => {
+      const response = await api.get('/justificantes/admin/pendientes');
+      return response.data.justificantes || []; // extrae el array
+  },
+  getByUsuario: async (usuarioId) => {
+      const response = await api.get(`/justificantes/usuario/${usuarioId}`);
+      return response.data.justificantes || []; // extrae el array
+  },
+  aprobarRechazar: async (id, data) => {
+    const response = await api.put(`/justificantes/admin/${id}`, data);
+    return response.data;
+  },
 };
 
+// ==================== HORARIOS ====================
 export const horariosService = {
-  asignar: (data) => api.post('/horarios/asignar', data),
-  getByUsuario: (usuarioId) => api.get(`/horarios/usuario/${usuarioId}`),
-  getAll: () => api.get('/horarios/admin'),
+  asignar: async (data) => {
+    const response = await api.post('/horarios/asignar', data);
+    return response.data;
+  },
+  getByUsuario: async (usuarioId) => {
+    const response = await api.get(`/horarios/usuario/${usuarioId}`);
+    // Respuesta: { status, horarios }
+    return response.data.horarios || [];
+  },
+  getAll: async () => {
+    const response = await api.get('/horarios/admin');
+    // Array directo
+    return response.data;
+  },
+  desactivar: async (id) => {
+    const response = await api.put(`/horarios/${id}/desactivar`);
+    return response.data;
+  },
 };
 
+// ==================== NÓMINAS ====================
 export const nominasService = {
-  subir: (data) => api.post('/nominas/subir', data),
-  getByUsuario: (usuarioId) => api.get(`/nominas/usuario/${usuarioId}`),
-  eliminar: (id) => api.delete(`/nominas/${id}`),
+  subir: async (formData) => {
+    const response = await api.post('/nominas/subir', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+  getByUsuario: async (usuarioId) => {
+    const response = await api.get(`/nominas/usuario/${usuarioId}`);
+    return response.data.nominas || [];
+  },
+  getAll: async () => {
+    const response = await api.get('/nominas/admin');
+    return response.data.nominas || [];  // ahora también tiene wrapper
+  },
+  eliminar: async (id) => {
+    const response = await api.delete(`/nominas/eliminar/${id}`);
+    return response.data;
+  },
 };
 
+// ==================== NFC ====================
 export const nfcService = {
-  fichaje: (cardUid) => api.post('/nfc/fichaje', { cardUid }),
-  asignar: (data) => api.post('/nfc/asignar', data),
-  getAll: () => api.get('/nfc/admin'),
+  fichaje: async (cardUid) => {
+    const response = await api.post('/nfc/fichaje', { cardUid });
+    return response.data;
+  },
+  asignar: async (data) => {
+    const response = await api.post('/nfc/asignar', data);
+    return response.data;
+  },
+  getAll: async () => {
+    const response = await api.get('/nfc/admin');
+    // Suponemos array directo
+    return response.data;
+  },
+  getFullHistory: async (usuarioId) => {
+      const response = await api.get(`/trabajador/historial/completo/${usuarioId}`);
+      return response.data.registros || [];
+    },
 };

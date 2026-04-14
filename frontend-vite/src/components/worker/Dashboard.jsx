@@ -1,28 +1,52 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { workerService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const WorkerDashboard = () => {
   const auth = useAuth();
-  const [historial, setHistorial] = useState([]);
+  const navigate = useNavigate();
+  const [registrosHoy, setRegistrosHoy] = useState([]);
+  const [resumen, setResumen] = useState({ horasEstaSemana: '0h', diasTrabajados: 0, promedioDiario: '0h' });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (auth.user?.id) {
-      fetchHistorial();
+      fetchData();
     }
   }, [auth.user]);
 
-  const fetchHistorial = async () => {
+  const fetchData = async () => {
     try {
-      const response = await workerService.getClockHistory(auth.user.id);
-      setHistorial(response.data || []);
+      const fullHistory = await workerService.getFullHistory(auth.user.id);
+      const resumenData = await workerService.getWeeklySummary(auth.user.id);
+
+      // Filtrar registros de hoy
+      const hoy = new Date().toDateString();
+      const registrosDelDia = fullHistory.filter(reg =>
+        new Date(reg.fechaHora).toDateString() === hoy
+      );
+
+      setRegistrosHoy(registrosDelDia);
+      setResumen(resumenData);
     } catch (error) {
-      console.error('Error fetching historial:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const ultimoFichaje = registrosHoy.length > 0 ? registrosHoy[registrosHoy.length - 1] : null;
+
+  if (loading) {
+    return (
+      <div className="text-center mt-5">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -42,8 +66,13 @@ const WorkerDashboard = () => {
             <div className="card-body">
               <h5 className="card-title">📊 Resumen Semanal</h5>
               <p className="card-text">Horas trabajadas esta semana:</p>
-              <h2 className="text-primary">40 horas</h2>
-              <button className="btn btn-outline-primary mt-2">
+              <h2 className="text-primary">{resumen.horasEstaSemana || '0h'}</h2>
+              <p className="mb-1">Días trabajados: {resumen.diasTrabajados || 0}</p>
+              <p className="mb-1">Promedio diario: {resumen.promedioDiario || '0h'}</p>
+              <button
+                className="btn btn-outline-primary mt-2"
+                onClick={() => navigate('/worker/historial')}
+              >
                 Ver detalles completos
               </button>
             </div>
@@ -54,11 +83,11 @@ const WorkerDashboard = () => {
           <div className="card h-100">
             <div className="card-body">
               <h5 className="card-title">⏰ Último Fichaje</h5>
-              {historial.length > 0 ? (
+              {ultimoFichaje ? (
                 <>
                   <p className="card-text">
-                    {historial[0].tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}:
-                    <strong> {new Date(historial[0].fechaHora).toLocaleString()}</strong>
+                    {ultimoFichaje.tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}:
+                    <strong> {new Date(ultimoFichaje.fechaHora).toLocaleTimeString()}</strong>
                   </p>
                   <button className="btn btn-outline-secondary" disabled>
                     Fichar (Solo con NFC en empresa)
@@ -83,7 +112,10 @@ const WorkerDashboard = () => {
             <div className="card-body">
               <h5 className="card-title">📄 Mis Justificantes</h5>
               <p className="card-text">Gestiona tus justificantes de ausencia</p>
-              <button className="btn btn-outline-success">
+              <button
+                className="btn btn-outline-success"
+                onClick={() => navigate('/worker/justificantes')}
+              >
                 Solicitar justificante
               </button>
             </div>
@@ -95,7 +127,10 @@ const WorkerDashboard = () => {
             <div className="card-body">
               <h5 className="card-title">💰 Mis Nóminas</h5>
               <p className="card-text">Consulta y descarga tus nóminas</p>
-              <button className="btn btn-outline-info">
+              <button
+                className="btn btn-outline-info"
+                onClick={() => navigate('/worker/nominas')}
+              >
                 Ver nóminas disponibles
               </button>
             </div>
@@ -105,27 +140,20 @@ const WorkerDashboard = () => {
 
       <div className="card mt-4">
         <div className="card-body">
-          <h5 className="card-title">📋 Historial Reciente</h5>
-          {loading ? (
-            <div className="text-center">
-              <div className="spinner-border spinner-border-sm"></div>
-              <p>Cargando historial...</p>
-            </div>
-          ) : historial.length > 0 ? (
+          <h5 className="card-title">📋 Registros de Hoy</h5>
+          {registrosHoy.length > 0 ? (
             <div className="table-responsive">
               <table className="table table-striped">
                 <thead>
                   <tr>
-                    <th>Fecha</th>
                     <th>Hora</th>
                     <th>Tipo</th>
                     <th>Estado</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {historial.slice(0, 5).map((item, index) => (
+                  {registrosHoy.map((item, index) => (
                     <tr key={index}>
-                      <td>{new Date(item.fechaHora).toLocaleDateString()}</td>
                       <td>{new Date(item.fechaHora).toLocaleTimeString()}</td>
                       <td>
                         <span className={`badge ${
@@ -143,7 +171,7 @@ const WorkerDashboard = () => {
               </table>
             </div>
           ) : (
-            <p className="text-muted">No hay registros de fichajes disponibles.</p>
+            <p className="text-muted">No hay registros de fichajes hoy.</p>
           )}
         </div>
       </div>

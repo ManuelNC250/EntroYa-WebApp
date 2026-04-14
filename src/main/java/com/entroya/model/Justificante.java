@@ -3,6 +3,8 @@ package com.entroya.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import jakarta.persistence.Basic;
+import jakarta.persistence.FetchType;
 
 @Entity
 @Table(name = "justificantes")
@@ -35,6 +37,13 @@ public class Justificante {
 
     @Column(nullable = false)
     private LocalDateTime fechaSolicitud = LocalDateTime.now();
+
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    private byte[] archivo; // contenido del archivo
+
+    private String archivoNombre;     // nombre original
+    private String archivoTipo;       // MIME type
 
     // Constructores, Getters y Setters...
     public Justificante() {}
@@ -73,4 +82,28 @@ public class Justificante {
 
     public String getArchivoUrl() { return archivoUrl; }
     public void setArchivoUrl(String archivoUrl) { this.archivoUrl = archivoUrl; }
+
+    public byte[] getArchivo() {
+        return archivo;
+    }
+
+    public void setArchivo(byte[] archivo) {
+        this.archivo = archivo;
+    }
+
+    public String getArchivoNombre() {
+        return archivoNombre;
+    }
+
+    public void setArchivoNombre(String archivoNombre) {
+        this.archivoNombre = archivoNombre;
+    }
+
+    public String getArchivoTipo() {
+        return archivoTipo;
+    }
+
+    public void setArchivoTipo(String archivoTipo) {
+        this.archivoTipo = archivoTipo;
+    }
 }

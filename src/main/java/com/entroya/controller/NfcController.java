@@ -3,7 +3,7 @@ package com.entroya.controller;
 import com.entroya.dto.AsignarTarjetaRequest;
 import com.entroya.dto.NfcFichajeRequest;
 import com.entroya.model.*;
-import com.entroya.repository.RegistroRepository;
+import com.entroya.repository.FichajeRepository;
 import com.entroya.repository.TarjetaNfcRepository;
 import com.entroya.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class NfcController {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
-    private RegistroRepository registroRepository;
+    private FichajeRepository fichajeRepository;
 
     // Endpoint para la app NFC de fichaje
     @PostMapping("/fichaje")
@@ -49,9 +49,9 @@ public class NfcController {
             // Determinar automáticamente si es entrada o salida
             TipoRegistro tipo = determinarTipoFichaje(usuario);
 
-            // Crear registro de fichaje
-            Registro registro = new Registro(usuario, tipo);
-            registroRepository.save(registro);
+            // Crear fichajes de fichaje
+            Fichajes fichajes = new Fichajes(usuario, tipo);
+            fichajeRepository.save(fichajes);
 
             response.put("status", "success");
             response.put("message", tipo + " registrado correctamente");
@@ -122,14 +122,14 @@ public class NfcController {
         LocalDateTime inicioDia = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
         LocalDateTime finDia = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
 
-        List<Registro> registrosHoy = registroRepository.findByUsuarioAndFechaHoraBetween(usuario, inicioDia, finDia);
+        List<Fichajes> registrosHoy = fichajeRepository.findByUsuarioAndFechaHoraBetween(usuario, inicioDia, finDia);
 
         if (registrosHoy.isEmpty()) {
             return TipoRegistro.ENTRADA;
         }
 
         // Obtener el último registro
-        Registro ultimoRegistro = registrosHoy.get(registrosHoy.size() - 1);
-        return (ultimoRegistro.getTipo() == TipoRegistro.ENTRADA) ? TipoRegistro.SALIDA : TipoRegistro.ENTRADA;
+        Fichajes ultimoFichajes = registrosHoy.get(registrosHoy.size() - 1);
+        return (ultimoFichajes.getTipo() == TipoRegistro.ENTRADA) ? TipoRegistro.SALIDA : TipoRegistro.ENTRADA;
     }
 }

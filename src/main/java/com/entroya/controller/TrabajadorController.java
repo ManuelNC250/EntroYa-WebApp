@@ -1,11 +1,12 @@
 package com.entroya.controller;
 
-import com.entroya.model.Registro;
+import com.entroya.model.Fichajes;
 import com.entroya.model.Usuario;
-import com.entroya.repository.RegistroRepository;
+import com.entroya.repository.FichajeRepository;
 import com.entroya.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -19,25 +20,22 @@ import java.util.stream.Collectors;
 public class TrabajadorController {
 
     @Autowired
-    private RegistroRepository registroRepository;
+    private FichajeRepository fichajeRepository;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
 
     @GetMapping("/historial/{usuarioId}")
-    public Map<String, Object> getHistorial(@PathVariable Long usuarioId) {
+    public Map<String, Object> getHistorialHoy(@PathVariable Long usuarioId) {
         Map<String, Object> response = new HashMap<>();
-
         try {
             Usuario usuario = usuarioRepository.findById(usuarioId)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-            // Obtener registros de hoy
             LocalDateTime inicioDia = LocalDate.now().atStartOfDay();
             LocalDateTime finDia = LocalDate.now().atTime(23, 59, 59);
 
-            List<Registro> registrosHoy = registroRepository.findByUsuarioAndFechaHoraBetween(
-                    usuario, inicioDia, finDia);
+            List<Fichajes> registrosHoy = fichajeRepository.findByUsuarioAndFechaHoraBetween(usuario, inicioDia, finDia);
 
             response.put("status", "success");
             response.put("usuario", usuario.getNombre());
@@ -48,22 +46,58 @@ public class TrabajadorController {
             response.put("status", "error");
             response.put("message", e.getMessage());
         }
+        return response;
+    }
 
+    // Nuevo endpoint: historial completo
+    @GetMapping("/historial/completo/{usuarioId}")
+    public Map<String, Object> getHistorialCompleto(@PathVariable Long usuarioId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Usuario usuario = usuarioRepository.findById(usuarioId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            List<Fichajes> todosFichajes = fichajeRepository.findByUsuarioOrderByFechaHoraDesc(usuario);
+
+            response.put("status", "success");
+            response.put("usuario", usuario.getNombre());
+            response.put("registros", todosFichajes);
+            response.put("totalRegistros", todosFichajes.size());
+
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+        }
         return response;
     }
 
     @GetMapping("/resumen/{usuarioId}")
     public Map<String, Object> getResumenSemanal(@PathVariable Long usuarioId) {
         Map<String, Object> response = new HashMap<>();
+        try {
+            Usuario usuario = usuarioRepository.findById(usuarioId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Aquí iría la lógica para calcular horas trabajadas esta semana
-        // Por ahora devolvemos un resumen básico
+            // Calcular inicio de la semana (lunes)
+            LocalDate hoy = LocalDate.now();
+            LocalDate inicioSemana = hoy.with(DayOfWeek.MONDAY);
+            LocalDateTime inicio = inicioSemana.atStartOfDay();
+            LocalDateTime fin = hoy.atTime(23, 59, 59);
 
-        response.put("status", "success");
-        response.put("horasEstaSemana", "40h 15m");
-        response.put("diasTrabajados", 5);
-        response.put("promedioDiario", "8h 3m");
+            List<Fichajes> registrosSemana = fichajeRepository.findByUsuarioAndFechaHoraBetween(usuario, inicio, fin);
 
+            // Calcular horas trabajadas (asumiendo pares entrada/salida)
+            double horasTotales = 0;
+            // ... lógica para agrupar por día y calcular diferencias ...
+
+            response.put("status", "success");
+            response.put("horasEstaSemana", String.format("%.2fh", horasTotales));
+            response.put("diasTrabajados", registrosSemana.stream().map(r -> r.getFechaHora().toLocalDate()).distinct().count());
+            response.put("promedioDiario", String.format("%.2fh", horasTotales / Math.max(1, (Integer) response.get("diasTrabajados"))));
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+        }
         return response;
     }
 

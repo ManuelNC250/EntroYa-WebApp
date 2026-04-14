@@ -23,10 +23,15 @@ public class Usuario {
     @Column(nullable = false)
     private Rol rol;
 
+    private String departamento;
+
     // Constructor vacío necesario para JPA
     public Usuario() {}
 
     // Getters y Setters
+    public String getDepartamento() { return departamento; }
+    public void setDepartamento(String departamento) { this.departamento = departamento; }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

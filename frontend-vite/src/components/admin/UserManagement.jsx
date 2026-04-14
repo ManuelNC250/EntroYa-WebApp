@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -14,14 +15,16 @@ const UserManagement = () => {
     departamento: ''
   });
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
     try {
-      const response = await adminService.getUsers();
-      setUsers(response.data || []);
+      const usersData = await adminService.getUsers();
+      setUsers(usersData);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -39,11 +42,40 @@ const UserManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí iría la lógica para crear/actualizar usuario
-    console.log('Form data:', formData);
-    alert(editingUser ? 'Usuario actualizado' : 'Usuario creado');
-    setShowModal(false);
-    fetchUsers();
+    try {
+      let result;
+      if (editingUser) {
+        result = await adminService.actualizarUsuario(editingUser.id, formData);
+      } else {
+        result = await adminService.crearUsuario(formData);
+      }
+
+      if (result.status === 'success') {
+        alert(editingUser ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
+        setShowModal(false);
+        fetchUsers();
+      } else {
+        alert('Error: ' + result.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexión');
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
+      try {
+        const result = await adminService.eliminarUsuario(userId);
+        if (result.status === 'success') {
+          fetchUsers();
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (error) {
+        alert('Error al eliminar el usuario');
+      }
+    }
   };
 
   const handleEdit = (user) => {
@@ -56,14 +88,6 @@ const UserManagement = () => {
       departamento: user.departamento || ''
     });
     setShowModal(true);
-  };
-
-  const handleDelete = (userId) => {
-    if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
-      console.log('Eliminar usuario:', userId);
-      // Aquí iría la llamada a la API para eliminar
-      fetchUsers();
-    }
   };
 
   if (loading) {
@@ -137,6 +161,12 @@ const UserManagement = () => {
                       onClick={() => handleDelete(user.id)}
                     >
                       Eliminar
+                    </button>
+                    <button
+                        className="btn btn-sm btn-outline-info"
+                        onClick={() => navigate('/admin/historial/trabajador/' + user.id)}
+                    >
+                      Ver historial
                     </button>
                   </div>
                 </td>

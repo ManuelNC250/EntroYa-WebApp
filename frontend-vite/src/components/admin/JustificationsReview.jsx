@@ -1,33 +1,63 @@
 import React, { useState, useEffect } from 'react';
-import { justificantesService } from '../../services/api';
+import { justificantesService, adminService } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const JustificationsReview = () => {
+  const navigate = useNavigate();
   const [justificantes, setJustificantes] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchJustificantes();
+    fetchData();
   }, []);
 
-  const fetchJustificantes = async () => {
+  const fetchData = async () => {
     try {
-      const response = await justificantesService.getPendientes();
-      setJustificantes(response.data || []);
+      const [justs, users] = await Promise.all([
+        justificantesService.getPendientes(),
+        adminService.getUsers()
+      ]);
+      setJustificantes(justs);
+      setUsuarios(users);
     } catch (error) {
-      console.error('Error fetching justificantes:', error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleVerHistorial = () => {
+    if (usuarioSeleccionado) {
+      navigate('/admin/justificantes/trabajador/' + usuarioSeleccionado);
+    }
+  };
+
+  const handleDescargar = async (id, nombre) => {
+    try {
+      const response = await fetch('/api/justificantes/descargar/' + id);
+      if (!response.ok) throw new Error('Error');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre || 'justificante.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Error al descargar');
+    }
+  };
+
   const handleAprobar = async (id) => {
-    if (window.confirm('¿Aprobar este justificante?')) {
+    if (window.confirm('Aprobar este justificante?')) {
       try {
         await justificantesService.aprobarRechazar(id, { estado: 'APROBADO' });
-        alert('Justificante aprobado');
-        fetchJustificantes();
+        fetchData();
       } catch (error) {
-        console.error('Error aprobando justificante:', error);
         alert('Error al aprobar');
       }
     }
@@ -37,91 +67,89 @@ const JustificationsReview = () => {
     const motivo = prompt('Motivo del rechazo:');
     if (motivo) {
       try {
-        await justificantesService.aprobarRechazar(id, {
-          estado: 'RECHAZADO',
-          comentarios: motivo
-        });
-        alert('Justificante rechazado');
-        fetchJustificantes();
+        await justificantesService.aprobarRechazar(id, { estado: 'RECHAZADO', comentarios: motivo });
+        fetchData();
       } catch (error) {
-        console.error('Error rechazando justificante:', error);
         alert('Error al rechazar');
       }
     }
   };
 
-  if (loading) {
-    return (
-      <div className="text-center mt-5">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="text-center mt-5"><div className="spinner-border"></div></div>;
 
   return (
-    <div>
-      <h2 className="mb-4">Justificantes Pendientes</h2>
+      <div>
+        <h2 className="mb-4">Justificantes</h2>
 
-      {justificantes.length === 0 ? (
-        <div className="alert alert-info">
-          No hay justificantes pendientes de revisión.
+        <div className="card mb-4">
+          <div className="card-body">
+            <h6 className="card-title">Ver historial de un trabajador</h6>
+            <div className="d-flex gap-2">
+              <select
+                  className="form-select"
+                  value={usuarioSeleccionado}
+                  onChange={e => setUsuarioSeleccionado(e.target.value)}
+              >
+                <option value="">Selecciona un trabajador...</option>
+                {usuarios.map(u => (
+                    <option key={u.id} value={u.id}>{u.nombre} - {u.email}</option>
+                ))}
+              </select>
+              <button
+                  className="btn btn-outline-primary"
+                  onClick={handleVerHistorial}
+                  disabled={!usuarioSeleccionado}
+              >
+                Ver historial
+              </button>
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-striped">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Usuario</th>
-                <th>Tipo</th>
-                <th>Fecha</th>
-                <th>Descripción</th>
-                <th>Archivo</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {justificantes.map(just => (
-                <tr key={just.id}>
-                  <td>{just.id}</td>
-                  <td>{just.usuario?.nombre || just.usuarioId}</td>
-                  <td>
-                    <span className="badge bg-info">{just.tipo}</span>
-                  </td>
-                  <td>{new Date(just.fecha).toLocaleDateString()}</td>
-                  <td>{just.descripcion}</td>
-                  <td>
-                    {just.archivoUrl ? (
-                      <a href={just.archivoUrl} target="_blank" rel="noreferrer">
-                        Ver archivo
-                      </a>
-                    ) : 'Sin archivo'}
-                  </td>
-                  <td>
-                    <div className="btn-group">
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => handleAprobar(just.id)}
-                      >
-                        Aprobar
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleRechazar(just.id)}
-                      >
-                        Rechazar
-                      </button>
-                    </div>
-                  </td>
+
+        <h5>Pendientes de revision</h5>
+        {justificantes.length === 0 ? (
+            <div className="alert alert-info">No hay justificantes pendientes.</div>
+        ) : (
+            <div className="table-responsive">
+              <table className="table table-striped">
+                <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Usuario</th>
+                  <th>Tipo</th>
+                  <th>Fecha</th>
+                  <th>Descripcion</th>
+                  <th>Archivo</th>
+                  <th>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+                </thead>
+                <tbody>
+                {justificantes.map(just => (
+                    <tr key={just.id}>
+                      <td>{just.id}</td>
+                      <td>{just.usuarioNombre || just.usuarioId}</td>
+                      <td><span className="badge bg-info">{just.tipo}</span></td>
+                      <td>{new Date(just.fecha).toLocaleDateString()}</td>
+                      <td>{just.descripcion}</td>
+                      <td>
+                        {just.tieneArchivo
+                            ? <button className="btn btn-sm btn-outline-secondary" onClick={() => handleDescargar(just.id, just.archivoNombre)}>Ver archivo</button>
+                            : 'Sin archivo'
+                        }
+                      </td>
+                      <td>
+                        <div className="btn-group">
+                          <button className="btn btn-sm btn-success" onClick={() => handleAprobar(just.id)}>Aprobar</button>
+                          <button className="btn btn-sm btn-danger" onClick={() => handleRechazar(just.id)}>Rechazar</button>
+                        </div>
+                      </td>
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+            </div>
+        )}
+      </div>
   );
 };
 

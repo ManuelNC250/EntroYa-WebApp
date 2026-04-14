@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "registros")
-public class Registro {
+@Table(name = "fichajes")
+public class Fichajes {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,9 +21,9 @@ public class Registro {
     @Column(nullable = false)
     private TipoRegistro tipo;
 
-    public Registro() {}
+    public Fichajes() {}
 
-    public Registro(Usuario usuario, TipoRegistro tipo) {
+    public Fichajes(Usuario usuario, TipoRegistro tipo) {
         this.usuario = usuario;
         this.tipo = tipo;
         this.fechaHora = LocalDateTime.now();

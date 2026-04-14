@@ -24,7 +24,7 @@ public class Nomina {
     private String archivoNombre;
 
     @Column(nullable = false)
-    private String archivoUrl;
+    private String archivoUrl = ""; // valor por defecto vacío para no romper constraint
 
     @Column(nullable = false)
     private String archivoTipo;
@@ -36,6 +36,10 @@ public class Nomina {
     private LocalDateTime fechaSubida = LocalDateTime.now();
 
     private String comentarios;
+
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    private byte[] archivoContenido;
 
     // Constructores
     public Nomina() {}
@@ -80,4 +84,12 @@ public class Nomina {
 
     public String getComentarios() { return comentarios; }
     public void setComentarios(String comentarios) { this.comentarios = comentarios; }
+
+    public byte[] getArchivoContenido() {
+        return archivoContenido;
+    }
+
+    public void setArchivoContenido(byte[] archivoContenido) {
+        this.archivoContenido = archivoContenido;
+    }
 }
