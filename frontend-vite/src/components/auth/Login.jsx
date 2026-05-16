@@ -41,9 +41,9 @@ const Login = () => {
   const useTestCredentials = (role) => {
     if (role === 'admin') {
       setEmail('admin@entroya.com');
-      setPassword('1234');
+      setPassword('admin');
     } else {
-      setEmail('plica@gmail.com');
+      setEmail('trabajador@entroya.com');
       setPassword('plica25');
     }
   };
@@ -129,12 +129,6 @@ const Login = () => {
               Usuario Trabajador
             </button>
           </div>
-        </div>
-
-        <div className="mt-4 text-center">
-          <small className="text-muted">
-            ¿Problemas? Abre la consola (F12) y mira los mensajes
-          </small>
         </div>
       </div>
     </div>
