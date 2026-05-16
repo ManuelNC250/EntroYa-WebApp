@@ -1,13 +1,18 @@
 package com.entroya.controller;
 
+import com.entroya.model.EstadoJustificante;
 import com.entroya.model.Rol;
 import com.entroya.model.Usuario;
 import com.entroya.repository.FichajeRepository;
+import com.entroya.repository.JustificanteRepository;
 import com.entroya.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,22 +28,41 @@ public class AdminController {
     @Autowired
     private FichajeRepository fichajeRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JustificanteRepository justificanteRepository;
+
+    @Transactional(readOnly = true)
     @GetMapping("/dashboard")
     public Map<String, Object> getDashboard() {
         Map<String, Object> dashboard = new HashMap<>();
+        try {
+            long totalUsuarios = usuarioRepository.count();
+            long totalAdmins = usuarioRepository.findAll().stream()
+                    .filter(u -> u.getRol().name().equals("ADMIN")).count();
+            long totalTrabajadores = totalUsuarios - totalAdmins;
 
-        // Estadísticas básicas
-        long totalUsuarios = usuarioRepository.count();
-        long totalAdmins = usuarioRepository.findAll().stream()
-                .filter(u -> u.getRol().name().equals("ADMIN"))
-                .count();
-        long totalTrabajadores = totalUsuarios - totalAdmins;
+            // Fichajes de hoy
+            LocalDateTime inicioHoy = LocalDate.now().atStartOfDay();
+            LocalDateTime finHoy = LocalDate.now().atTime(23, 59, 59);
+            long fichajesHoy = fichajeRepository.countByFechaHoraBetween(inicioHoy, finHoy);
 
-        dashboard.put("totalUsuarios", totalUsuarios);
-        dashboard.put("totalAdmins", totalAdmins);
-        dashboard.put("totalTrabajadores", totalTrabajadores);
-        dashboard.put("status", "success");
+            // Justificantes pendientes — solo contar, no cargar el LOB
+            long justificantesPendientes = justificanteRepository.countByEstado(EstadoJustificante.PENDIENTE);
 
+            dashboard.put("totalUsuarios", totalUsuarios);
+            dashboard.put("totalAdmins", totalAdmins);
+            dashboard.put("totalTrabajadores", totalTrabajadores);
+            dashboard.put("fichajesHoy", fichajesHoy);
+            dashboard.put("justificantesPendientes", justificantesPendientes);
+            dashboard.put("status", "success");
+
+        } catch (Exception e) {
+            dashboard.put("status", "error");
+            dashboard.put("message", e.getMessage());
+        }
         return dashboard;
     }
 
@@ -69,7 +93,7 @@ public class AdminController {
             Usuario usuario = new Usuario();
             usuario.setNombre(request.get("nombre"));
             usuario.setEmail(request.get("email"));
-            usuario.setPassword(request.get("password")); // En producción: encriptar
+            usuario.setPassword(passwordEncoder.encode(request.get("password")));
             usuario.setRol(Rol.valueOf(request.get("rol")));
             usuario.setDepartamento(request.get("departamento"));
 
@@ -100,7 +124,7 @@ public class AdminController {
             if (request.get("departamento") != null) usuario.setDepartamento(request.get("departamento"));
             if (request.get("rol") != null) usuario.setRol(Rol.valueOf(request.get("rol")));
             if (request.get("password") != null && !request.get("password").isBlank()) {
-                usuario.setPassword(request.get("password"));
+                usuario.setPassword(passwordEncoder.encode(request.get("password")));
             }
 
             usuarioRepository.save(usuario);

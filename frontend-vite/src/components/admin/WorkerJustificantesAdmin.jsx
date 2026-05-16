@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { justificantesService, adminService } from '../../services/api';
+import { notify } from '../../utils/toast';
 
 const WorkerJustificantesAdmin = () => {
     const { usuarioId } = useParams();
@@ -9,9 +10,7 @@ const WorkerJustificantesAdmin = () => {
     const [usuario, setUsuario] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchData();
-    }, [usuarioId]);
+    useEffect(() => { fetchData(); }, [usuarioId]);
 
     const fetchData = async () => {
         try {
@@ -22,13 +21,14 @@ const WorkerJustificantesAdmin = () => {
             setJustificantes(Array.isArray(justs) ? justs : []);
             setUsuario(user);
         } catch (error) {
-            console.error(error);
+            notify.error('Error al cargar justificantes');
         } finally {
             setLoading(false);
         }
     };
 
     const handleDescargar = async (id, nombre) => {
+        const toastId = notify.loading('Descargando...');
         try {
             const response = await fetch('/api/justificantes/descargar/' + id);
             if (!response.ok) throw new Error('Error');
@@ -41,29 +41,49 @@ const WorkerJustificantesAdmin = () => {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
+            notify.dismiss(toastId);
+            notify.success('Descarga completada');
         } catch (error) {
-            alert('Error al descargar');
+            notify.dismiss(toastId);
+            notify.error('Error al descargar');
         }
     };
 
-    if (loading) return <div className="text-center mt-5"><div className="spinner-border"></div></div>;
+    const estadoBadge = (estado) => {
+        if (estado === 'APROBADO') return 'badge-soft-success';
+        if (estado === 'RECHAZADO') return 'badge-soft-danger';
+        return 'badge-soft-warning';
+    };
+
+    if (loading) {
+        return (
+            <div className="spinner-container">
+                <div className="spinner-border" role="status"></div>
+            </div>
+        );
+    }
 
     return (
-        <div>
-            <div className="d-flex align-items-center mb-4 gap-3">
-                <button className="btn btn-outline-secondary" onClick={() => navigate('/admin/usuarios')}>
-                    Volver
+        <div className="fade-in-up">
+            <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <button className="btn btn-outline-secondary btn-sm" onClick={() => navigate('/admin/justificantes')}>
+                    ← Volver
                 </button>
-                <h2 className="mb-0">
-                    Justificantes de {usuario?.nombre || 'Trabajador'}
-                </h2>
+                <div>
+                    <h2 style={{ marginBottom: '2px' }}>Justificantes de {usuario?.nombre || 'Trabajador'}</h2>
+                    <p style={{ margin: 0 }}>{usuario?.email}</p>
+                </div>
             </div>
 
             {justificantes.length === 0 ? (
-                <div className="alert alert-info">Este trabajador no tiene justificantes.</div>
+                <div className="empty-state">
+                    <div className="empty-icon">📄</div>
+                    <h5>Sin justificantes</h5>
+                    <p>Este trabajador no ha solicitado ningun justificante</p>
+                </div>
             ) : (
                 <div className="table-responsive">
-                    <table className="table table-striped">
+                    <table className="table table-hover">
                         <thead>
                         <tr>
                             <th>Fecha</th>
@@ -77,19 +97,19 @@ const WorkerJustificantesAdmin = () => {
                         <tbody>
                         {justificantes.map(j => (
                             <tr key={j.id}>
-                                <td>{new Date(j.fecha).toLocaleDateString()}</td>
-                                <td><span className="badge bg-info">{j.tipo}</span></td>
-                                <td>{j.descripcion}</td>
-                                <td>
-                    <span className={'badge ' + (j.estado === 'APROBADO' ? 'bg-success' : j.estado === 'RECHAZADO' ? 'bg-danger' : 'bg-warning')}>
-                      {j.estado}
-                    </span>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>
+                                    {new Date(j.fecha).toLocaleDateString('es-ES')}
                                 </td>
-                                <td>{j.comentariosAdmin || '-'}</td>
+                                <td><span className="badge badge-soft-info">{j.tipo}</span></td>
+                                <td style={{ maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {j.descripcion}
+                                </td>
+                                <td><span className={'badge ' + estadoBadge(j.estado)}>{j.estado}</span></td>
+                                <td style={{ fontSize: '0.8125rem', color: 'var(--gray-500)' }}>{j.comentariosAdmin || '—'}</td>
                                 <td>
                                     {j.tieneArchivo
-                                        ? <button className="btn btn-sm btn-outline-secondary" onClick={() => handleDescargar(j.id, j.archivoNombre)}>Descargar</button>
-                                        : '-'
+                                        ? <button className="btn btn-outline-secondary btn-sm" onClick={() => handleDescargar(j.id, j.archivoNombre)}>📎 Archivo</button>
+                                        : <span style={{ color: 'var(--gray-300)' }}>—</span>
                                     }
                                 </td>
                             </tr>

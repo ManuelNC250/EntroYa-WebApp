@@ -1,32 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { notify, confirmToast } from '../../utils/toast.jsx';
+import Modal from '../shared/Modal';
 
 const UserManagement = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    nombre: '',
-    email: '',
-    password: '',
-    rol: 'TRABAJADOR',
-    departamento: ''
+    nombre: '', email: '', password: '', rol: 'TRABAJADOR', departamento: ''
   });
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
     try {
-      const usersData = await adminService.getUsers();
-      setUsers(usersData);
-    } catch (error) {
-      console.error('Error fetching users:', error);
+      const data = await adminService.getUsers();
+      setUsers(data);
+    } catch {
+      notify.error('Error al cargar usuarios');
     } finally {
       setLoading(false);
     }
@@ -34,97 +30,80 @@ const UserManagement = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const openCreate = () => {
+    setEditingUser(null);
+    setFormData({ nombre: '', email: '', password: '', rol: 'TRABAJADOR', departamento: '' });
+    setShowModal(true);
+  };
+
+  const openEdit = (user) => {
+    setEditingUser(user);
+    setFormData({ nombre: user.nombre, email: user.email, password: '', rol: user.rol, departamento: user.departamento || '' });
+    setShowModal(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
-      let result;
-      if (editingUser) {
-        result = await adminService.actualizarUsuario(editingUser.id, formData);
-      } else {
-        result = await adminService.crearUsuario(formData);
-      }
-
+      const result = editingUser
+          ? await adminService.actualizarUsuario(editingUser.id, formData)
+          : await adminService.crearUsuario(formData);
       if (result.status === 'success') {
-        alert(editingUser ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
+        notify.success(editingUser ? 'Usuario actualizado' : 'Usuario creado');
         setShowModal(false);
         fetchUsers();
       } else {
-        alert('Error: ' + result.message);
+        notify.error(result.message || 'Error al guardar');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error de conexión');
+    } catch {
+      notify.error('Error de conexion');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDelete = async (userId) => {
-    if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
+  const handleDelete = (userId, nombre) => {
+    confirmToast('Eliminar a ' + nombre + '? Esta accion no se puede deshacer.', async () => {
       try {
         const result = await adminService.eliminarUsuario(userId);
         if (result.status === 'success') {
+          notify.success('Usuario eliminado');
           fetchUsers();
         } else {
-          alert('Error: ' + result.message);
+          notify.error(result.message || 'Error al eliminar');
         }
-      } catch (error) {
-        alert('Error al eliminar el usuario');
+      } catch {
+        notify.error('Error al eliminar');
       }
-    }
-  };
-
-  const handleEdit = (user) => {
-    setEditingUser(user);
-    setFormData({
-      nombre: user.nombre,
-      email: user.email,
-      password: '',
-      rol: user.rol,
-      departamento: user.departamento || ''
     });
-    setShowModal(true);
   };
 
   if (loading) {
     return (
-      <div className="text-center mt-5">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Cargando...</span>
+        <div className="spinner-container">
+          <div className="spinner-border"></div>
+          <span style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>Cargando usuarios...</span>
         </div>
-      </div>
     );
   }
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gestión de Usuarios</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setEditingUser(null);
-            setFormData({
-              nombre: '',
-              email: '',
-              password: '',
-              rol: 'TRABAJADOR',
-              departamento: ''
-            });
-            setShowModal(true);
-          }}
-        >
-          + Nuevo Usuario
-        </button>
-      </div>
+      <div className="fade-in-up">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h2>Gestion de Usuarios</h2>
+            <p>{users.length} usuarios registrados</p>
+          </div>
+          <button className="btn btn-primary" onClick={openCreate}>+ Nuevo usuario</button>
+        </div>
 
-      <div className="table-responsive">
-        <table className="table table-striped table-hover">
-          <thead>
+        <div className="table-responsive">
+          <table className="table table-hover">
+            <thead>
             <tr>
               <th>ID</th>
               <th>Nombre</th>
@@ -133,142 +112,87 @@ const UserManagement = () => {
               <th>Departamento</th>
               <th>Acciones</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             {users.map(user => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.nombre}</td>
-                <td>{user.email}</td>
-                <td>
-                  <span className={`badge ${
-                    user.rol === 'ADMIN' ? 'bg-danger' : 'bg-primary'
-                  }`}>
+                <tr key={user.id}>
+                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: 'var(--gray-400)' }}>#{user.id}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '50%',
+                        background: user.rol === 'ADMIN' ? '#fef2f2' : '#eff6ff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.8125rem', fontWeight: '700',
+                        color: user.rol === 'ADMIN' ? '#ef4444' : '#2563eb',
+                      }}>
+                        {user.nombre?.charAt(0).toUpperCase()}
+                      </div>
+                      <span style={{ fontWeight: '500' }}>{user.nombre}</span>
+                    </div>
+                  </td>
+                  <td style={{ color: 'var(--gray-500)', fontSize: '0.875rem' }}>{user.email}</td>
+                  <td>
+                  <span className={user.rol === 'ADMIN' ? 'badge badge-soft-danger' : 'badge badge-soft-primary'}>
                     {user.rol}
                   </span>
-                </td>
-                <td>{user.departamento || 'N/A'}</td>
-                <td>
-                  <div className="btn-group" role="group">
-                    <button
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => handleEdit(user)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      Eliminar
-                    </button>
-                    <button
-                        className="btn btn-sm btn-outline-info"
-                        onClick={() => navigate('/admin/historial/trabajador/' + user.id)}
-                    >
-                      Ver historial
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                  <td style={{ color: 'var(--gray-500)', fontSize: '0.875rem' }}>{user.departamento || '—'}</td>
+                  <td>
+                    <div className="btn-group">
+                      <button className="btn btn-sm btn-outline-primary" onClick={() => openEdit(user)}>Editar</button>
+                      <button className="btn btn-sm btn-outline-secondary" onClick={() => navigate('/admin/historial/trabajador/' + user.id)}>Historial</button>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(user.id, user.nombre)}>Eliminar</button>
+                    </div>
+                  </td>
+                </tr>
             ))}
-          </tbody>
-        </table>
-      </div>
+            </tbody>
+          </table>
+        </div>
 
-      {/* Modal para crear/editar usuario */}
-      {showModal && (
-        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowModal(false)}
-                ></button>
+        <Modal
+            show={showModal}
+            onClose={() => setShowModal(false)}
+            title={editingUser ? 'Editar usuario' : 'Nuevo usuario'}
+            footer={
+              <>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
+                <button type="submit" form="userForm" className="btn btn-primary" disabled={saving}>
+                  {saving ? <><span className="spinner-border spinner-border-sm me-2"></span>Guardando...</> : (editingUser ? 'Actualizar' : 'Crear usuario')}
+                </button>
+              </>
+            }
+        >
+          <form id="userForm" onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label className="form-label">Nombre completo</label>
+              <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleInputChange} required placeholder="Ej: Maria Garcia Lopez" />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Email</label>
+              <input type="email" className="form-control" name="email" value={formData.email} onChange={handleInputChange} required placeholder="email@empresa.com" />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">{editingUser ? 'Nueva contrasena (dejar vacio para no cambiar)' : 'Contrasena'}</label>
+              <input type="password" className="form-control" name="password" value={formData.password} onChange={handleInputChange} required={!editingUser} placeholder={editingUser ? 'Sin cambios' : 'Minimo 8 caracteres'} />
+            </div>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Rol</label>
+                <select className="form-select" name="rol" value={formData.rol} onChange={handleInputChange}>
+                  <option value="TRABAJADOR">Trabajador</option>
+                  <option value="ADMIN">Administrador</option>
+                </select>
               </div>
-              <div className="modal-body">
-                <form onSubmit={handleSubmit}>
-                  <div className="mb-3">
-                    <label className="form-label">Nombre</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="nombre"
-                      value={formData.nombre}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Email</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">
-                      {editingUser ? 'Nueva Contraseña (dejar en blanco para no cambiar)' : 'Contraseña'}
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required={!editingUser}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Rol</label>
-                    <select
-                      className="form-select"
-                      name="rol"
-                      value={formData.rol}
-                      onChange={handleInputChange}
-                    >
-                      <option value="TRABAJADOR">Trabajador</option>
-                      <option value="ADMIN">Administrador</option>
-                    </select>
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Departamento</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="departamento"
-                      value={formData.departamento}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setShowModal(false)}
-                    >
-                      Cancelar
-                    </button>
-                    <button type="submit" className="btn btn-primary">
-                      {editingUser ? 'Actualizar' : 'Crear'}
-                    </button>
-                  </div>
-                </form>
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Departamento</label>
+                <input type="text" className="form-control" name="departamento" value={formData.departamento} onChange={handleInputChange} placeholder="Ej: RRHH" />
               </div>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </form>
+        </Modal>
+      </div>
   );
 };
 

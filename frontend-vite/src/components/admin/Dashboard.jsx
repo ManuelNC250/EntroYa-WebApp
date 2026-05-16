@@ -8,70 +8,82 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  useEffect(() => { fetchDashboardData(); }, []);
 
   const fetchDashboardData = async () => {
     try {
       const data = await adminService.getDashboard();
-      setStats(data);
-    } catch (error) {
-      setError('Error al cargar los datos del dashboard');
+      if (data.status === 'success') {
+        setStats(data);
+      } else {
+        setError(data.message || 'Error al cargar');
+      }
+    } catch {
+      setError('Error de conexion');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="text-center mt-5"><div className="spinner-border text-primary"></div></div>;
+  if (loading) {
+    return (
+        <div className="spinner-container">
+          <div className="spinner-border"></div>
+          <span style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>Cargando panel...</span>
+        </div>
+    );
+  }
+
   if (error) return <div className="alert alert-danger">{error}</div>;
 
-  return (
-      <div>
-        <h1>Panel de Administracion</h1>
-        <p className="text-muted">Bienvenido al panel de administracion de EntroYa</p>
+  const statCards = [
+    { label: 'Usuarios totales', value: stats?.totalUsuarios ?? 0, colorClass: 'blue' },
+    { label: 'Trabajadores', value: stats?.totalTrabajadores ?? 0, colorClass: 'green' },
+    { label: 'Fichajes hoy', value: stats?.fichajesHoy ?? 0, colorClass: 'cyan' },
+    { label: 'Justificantes pendientes', value: stats?.justificantesPendientes ?? 0, colorClass: 'orange' },
+  ];
 
-        <div className="row mt-4">
-          <div className="col-md-4 mb-3">
-            <div className="card bg-primary text-white">
-              <div className="card-body">
-                <h5 className="card-title">Usuarios Totales</h5>
-                <h2>{stats?.totalUsuarios || 0}</h2>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-3">
-            <div className="card bg-success text-white">
-              <div className="card-body">
-                <h5 className="card-title">Administradores</h5>
-                <h2>{stats?.totalAdmins || 0}</h2>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-4 mb-3">
-            <div className="card bg-info text-white">
-              <div className="card-body">
-                <h5 className="card-title">Trabajadores</h5>
-                <h2>{stats?.totalTrabajadores || 0}</h2>
-              </div>
-            </div>
-          </div>
+  return (
+      <div className="fade-in-up">
+        <div style={{ marginBottom: '28px' }}>
+          <h1 style={{ marginBottom: '4px' }}>Panel de Administracion</h1>
+          <p style={{ margin: 0, color: 'var(--gray-400)', fontSize: '0.9rem' }}>
+            {new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
         </div>
 
-        <div className="row mt-4">
-          <div className="col-md-12">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title">Acciones Rapidas</h5>
-                <div className="d-flex flex-wrap gap-2">
-                  <button className="btn btn-outline-primary" onClick={() => navigate('/admin/usuarios')}>Gestionar Usuarios</button>
-                  <button className="btn btn-outline-success" onClick={() => navigate('/admin/justificantes')}>Ver Justificantes</button>
-                  <button className="btn btn-outline-info" onClick={() => navigate('/admin/horarios')}>Asignar Horarios</button>
-                  <button className="btn btn-outline-warning" onClick={() => navigate('/admin/nominas')}>Subir Nominas</button>
+        <div className="row gap-cards mb-5">
+          {statCards.map((s, i) => (
+              <div key={i} className="col-6 col-md-3 fade-in-up">
+                <div
+                    className={'card stat-card ' + s.colorClass}
+                    style={{ padding: '20px', borderRadius: '14px', border: 'none' }}
+                >
+                  <div className="stat-number">{s.value}</div>
+                  <div className="stat-label">{s.label}</div>
                 </div>
               </div>
-            </div>
-          </div>
+          ))}
+        </div>
+
+        <h4 style={{ marginBottom: '16px', color: 'var(--gray-700)', fontSize: '1rem', fontWeight: '600' }}>
+          Gestion rapida
+        </h4>
+        <div className="row gap-cards">
+          {[
+            { icon: '👥', title: 'Usuarios', desc: 'Crear, editar y eliminar', path: '/admin/usuarios' },
+            { icon: '📋', title: 'Justificantes', desc: stats?.justificantesPendientes > 0 ? stats.justificantesPendientes + ' pendientes' : 'Revisar y aprobar', path: '/admin/justificantes' },
+            { icon: '🗓️', title: 'Horarios', desc: 'Asignar turnos', path: '/admin/horarios' },
+            { icon: '💰', title: 'Nominas', desc: 'Subir PDFs', path: '/admin/nominas' },
+          ].map((item, i) => (
+              <div key={i} className="col-6 col-md-3 fade-in-up">
+                <div className="quick-action-card" onClick={() => navigate(item.path)}>
+                  <div className="qa-icon">{item.icon}</div>
+                  <div className="qa-title">{item.title}</div>
+                  <p className="qa-desc">{item.desc}</p>
+                </div>
+              </div>
+          ))}
         </div>
       </div>
   );

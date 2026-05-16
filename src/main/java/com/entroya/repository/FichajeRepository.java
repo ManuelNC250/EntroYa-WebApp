@@ -10,4 +10,10 @@ public interface FichajeRepository extends JpaRepository<Fichajes, Long> {
     List<Fichajes> findByUsuario(Usuario usuario);
     List<Fichajes> findByUsuarioAndFechaHoraBetween(Usuario usuario, LocalDateTime inicio, LocalDateTime fin);
     List<Fichajes> findByUsuarioOrderByFechaHoraDesc(Usuario usuario);
+    List<Fichajes> findByUsuarioIdAndFechaHoraBetweenOrderByFechaHoraAsc(
+            Long usuarioId,
+            LocalDateTime inicio,
+            LocalDateTime fin
+    );
+    long countByFechaHoraBetween(LocalDateTime inicio, LocalDateTime fin);
 }

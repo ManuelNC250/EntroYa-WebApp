@@ -1,24 +1,24 @@
+// ScheduleView.jsx — Trabajador
 import React, { useState, useEffect } from 'react';
 import { horariosService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { notify } from '../../utils/toast';
 
-const ScheduleView = () => {
+export const ScheduleView = () => {
   const auth = useAuth();
   const [horarios, setHorarios] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (auth.user?.id) {
-      fetchHorarios();
-    }
+    if (auth.user?.id) fetchHorarios();
   }, [auth.user]);
 
   const fetchHorarios = async () => {
     try {
       const data = await horariosService.getByUsuario(auth.user.id);
-      setHorarios(data); // data ya es un array
+      setHorarios(data);
     } catch (error) {
-      console.error('Error fetching horarios:', error);
+      notify.error('Error al cargar horarios');
       setHorarios([]);
     } finally {
       setLoading(false);
@@ -27,61 +27,89 @@ const ScheduleView = () => {
 
   if (loading) {
     return (
-      <div className="text-center mt-5">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Cargando...</span>
+        <div className="spinner-container">
+          <div className="spinner-border" role="status"></div>
+          <span style={{ color: 'var(--gray-400)', fontSize: '0.875rem' }}>Cargando horarios...</span>
         </div>
-      </div>
     );
   }
 
+  const activos = horarios.filter(h => h.activo);
+  const inactivos = horarios.filter(h => !h.activo);
+
   return (
-    <div>
-      <h2 className="mb-4">Mis Horarios</h2>
-
-      {horarios.length === 0 ? (
-        <div className="alert alert-info">
-          No tienes horarios asignados actualmente.
+      <div className="fade-in-up">
+        <div className="page-header">
+          <h2>Mis Horarios</h2>
+          <p>Consulta tu horario laboral asignado</p>
         </div>
-      ) : (
-        <div className="row">
-          {horarios.filter(h => h.activo).map(horario => (
-            <div key={horario.id} className="col-md-6 mb-4">
-              <div className="card">
-                <div className="card-header bg-primary text-white">
-                  <h5 className="mb-0">{horario.nombre}</h5>
-                </div>
-                <div className="card-body">
-                  <table className="table table-sm">
-                    <tbody>
-                      <tr>
-                        <th>Entrada:</th>
-                        <td>{horario.horaEntrada}</td>
-                      </tr>
-                      <tr>
-                        <th>Salida:</th>
-                        <td>{horario.horaSalida}</td>
-                      </tr>
-                      <tr>
-                        <th>Días:</th>
-                        <td>{horario.diasSemana}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+
+        {horarios.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🗓️</div>
+              <h5>Sin horarios asignados</h5>
+              <p>El administrador aun no te ha asignado ningun horario</p>
             </div>
-          ))}
-        </div>
-      )}
+        ) : (
+            <>
+              {activos.length > 0 && (
+                  <>
+                    <h5 style={{ marginBottom: '16px', color: 'var(--gray-700)' }}>Horarios activos</h5>
+                    <div className="row gap-cards mb-4">
+                      {activos.map(horario => (
+                          <div key={horario.id} className="col-md-6 fade-in-up">
+                            <div className="card" style={{ borderTop: '3px solid var(--primary)' }}>
+                              <div className="card-body">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                  <h5 className="card-title" style={{ margin: 0 }}>{horario.nombre}</h5>
+                                  <span className="badge badge-soft-success">Activo</span>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                  <div style={{ padding: '12px', background: 'var(--success-bg)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--gray-400)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '600' }}>Entrada</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>{horario.horaEntrada}</div>
+                                  </div>
+                                  <div style={{ padding: '12px', background: 'var(--danger-bg)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--gray-400)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: '600' }}>Salida</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>{horario.horaSalida}</div>
+                                  </div>
+                                </div>
+                                <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--gray-50)', borderRadius: 'var(--radius-md)', fontSize: '0.8125rem', color: 'var(--gray-600)' }}>
+                                  📅 {horario.diasSemana}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                      ))}
+                    </div>
+                  </>
+              )}
 
-      <div className="card mt-4">
-        <div className="card-body">
-          <h5 className="card-title">Calendario Semanal</h5>
-          <p className="text-muted">Próximamente: Vista de calendario interactiva</p>
-        </div>
+              {inactivos.length > 0 && (
+                  <>
+                    <h5 style={{ marginBottom: '16px', color: 'var(--gray-400)' }}>Horarios anteriores</h5>
+                    <div className="row gap-cards">
+                      {inactivos.map(horario => (
+                          <div key={horario.id} className="col-md-6 fade-in-up">
+                            <div className="card" style={{ opacity: 0.6 }}>
+                              <div className="card-body">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <h5 className="card-title" style={{ margin: 0 }}>{horario.nombre}</h5>
+                                  <span className="badge bg-secondary">Inactivo</span>
+                                </div>
+                                <p style={{ fontSize: '0.8125rem', color: 'var(--gray-400)', marginTop: '8px', marginBottom: 0 }}>
+                                  {horario.horaEntrada} — {horario.horaSalida} · {horario.diasSemana}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                      ))}
+                    </div>
+                  </>
+              )}
+            </>
+        )}
       </div>
-    </div>
   );
 };
 

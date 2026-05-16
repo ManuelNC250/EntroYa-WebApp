@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EntroYa · Fichajes sin fricción</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy: #050e1f;
+            --deep: #081529;
+            --blue: #1054d4;
+            --electric: #2d7dff;
+            --sky: #60a5fa;
+            --ice: #bfdbfe;
+            --white: #f0f6ff;
+            --muted: #6b8ab5;
+            --card: rgba(16,40,80,0.55);
+            --border: rgba(45,125,255,0.18);
+            --glow: rgba(45,125,255,0.22);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--navy);
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ── Background mesh ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                    radial-gradient(ellipse 80% 60% at 15% 10%, rgba(16,84,212,0.28) 0%, transparent 60%),
+                    radial-gradient(ellipse 60% 50% at 85% 80%, rgba(45,125,255,0.18) 0%, transparent 55%),
+                    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(8,21,41,0.5) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 6%;
+            background: rgba(5,14,31,0.72);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.45rem;
+            letter-spacing: -0.03em;
+            color: var(--white);
+            text-decoration: none;
+        }
+        .nav-logo span { color: var(--electric); }
+
+        .nav-links {
+            display: flex;
+            gap: 2.2rem;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--white); }
+
+        .nav-cta {
+            background: var(--electric);
+            color: #fff !important;
+            padding: 9px 22px;
+            border-radius: 8px;
+            font-weight: 600 !important;
+            transition: background 0.2s, transform 0.15s !important;
+        }
+        .nav-cta:hover { background: #1b68f5 !important; transform: translateY(-1px); color: #fff !important; }
+
+        /* ── SECTIONS ── */
+        section { position: relative; z-index: 1; }
+
+        /* ── HERO ── */
+        #inicio {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 6% 80px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(45,125,255,0.12);
+            border: 1px solid rgba(45,125,255,0.3);
+            color: var(--sky);
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease both;
+        }
+        .badge-dot {
+            width: 6px; height: 6px;
+            background: var(--sky);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.4); }
+        }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.8rem, 7vw, 5.5rem);
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            max-width: 800px;
+            animation: fadeUp 0.6s 0.1s ease both;
+        }
+        h1 .accent { color: var(--electric); }
+
+        .hero-sub {
+            margin-top: 1.4rem;
+            max-width: 560px;
+            color: var(--muted);
+            font-size: 1.1rem;
+            font-weight: 300;
+            line-height: 1.7;
+            animation: fadeUp 0.6s 0.2s ease both;
+        }
+
+        .hero-actions {
+            margin-top: 2.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeUp 0.6s 0.3s ease both;
+        }
+
+        .btn-primary {
+            background: var(--electric);
+            color: #fff;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.01em;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 0 30px rgba(45,125,255,0.35);
+        }
+        .btn-primary:hover {
+            background: #1b68f5;
+            transform: translateY(-2px);
+            box-shadow: 0 0 45px rgba(45,125,255,0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--white);
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s, background 0.2s, transform 0.15s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--electric);
+            background: rgba(45,125,255,0.07);
+            transform: translateY(-2px);
+        }
+
+        /* ── NFC VISUAL ── */
+        .nfc-visual {
+            margin-top: 5rem;
+            position: relative;
+            width: 280px;
+            height: 280px;
+            animation: fadeUp 0.6s 0.4s ease both;
+        }
+
+        .nfc-rings {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(45,125,255,0.3);
+            animation: expandRing 3s ease-out infinite;
+        }
+        .ring:nth-child(1) { width: 100px; height: 100px; animation-delay: 0s; }
+        .ring:nth-child(2) { width: 170px; height: 170px; animation-delay: 0.8s; }
+        .ring:nth-child(3) { width: 240px; height: 240px; animation-delay: 1.6s; }
+
+        @keyframes expandRing {
+            0% { opacity: 0.7; transform: scale(0.8); }
+            100% { opacity: 0; transform: scale(1.15); }
+        }
+
+        .nfc-card {
+            position: absolute;
+            width: 160px;
+            height: 100px;
+            background: linear-gradient(135deg, #1054d4 0%, #2d7dff 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 8px 40px rgba(45,125,255,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+            animation: cardFloat 4s ease-in-out infinite;
+        }
+        .nfc-card svg { opacity: 0.9; }
+        .nfc-card-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.7; font-weight: 500; }
+
+        @keyframes cardFloat {
+            0%,100% { transform: translateY(0) rotate(-3deg); }
+            50% { transform: translateY(-10px) rotate(-3deg); }
+        }
+
+        /* ── STATS STRIP ── */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            padding: 3rem 6%;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .stat-item { text-align: center; }
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--electric);
+            line-height: 1;
+        }
+        .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; letter-spacing: 0.04em; }
+
+        /* ── PRODUCTO ── */
+        #producto { padding: 100px 6%; }
+
+        .section-label {
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--electric);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            max-width: 600px;
+        }
+        .section-body {
+            margin-top: 1.2rem;
+            color: var(--muted);
+            max-width: 520px;
+            line-height: 1.75;
+            font-weight: 300;
+        }
+
+        /* Two-column layout */
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        /* Feature cards */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+            margin-top: 3rem;
+        }
+
+        .feat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.6rem;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+        }
+        .feat-card:hover {
+            border-color: rgba(45,125,255,0.45);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(45,125,255,0.12);
+        }
+
+        .feat-icon {
+            width: 42px; height: 42px;
+            background: rgba(45,125,255,0.14);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--sky);
+        }
+
+        .feat-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 0.4rem;
+        }
+        .feat-body { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+        /* ── APP PARTS ── */
+        #partes { padding: 80px 6%; }
+
+        .parts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .part-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.25s, transform 0.2s;
+        }
+        .part-card::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 180px; height: 180px;
+            background: radial-gradient(circle, rgba(45,125,255,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .part-card:hover {
+            border-color: rgba(45,125,255,0.4);
+            transform: translateY(-4px);
+        }
+
+        .part-tag {
+            display: inline-block;
+            background: rgba(45,125,255,0.14);
+            color: var(--sky);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 100px;
+            margin-bottom: 1.4rem;
+        }
+
+        .part-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.8rem;
+        }
+        .part-body { color: var(--muted); font-size: 0.9rem; line-height: 1.75; }
+
+        .part-list {
+            list-style: none;
+            margin-top: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .part-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.88rem;
+            color: var(--ice);
+        }
+        .part-list li::before {
+            content: '→';
+            color: var(--electric);
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ── PROPUESTA DE VALOR ── */
+        #valor { padding: 80px 6%; }
+
+        .value-card {
+            background: linear-gradient(135deg, rgba(16,84,212,0.2) 0%, rgba(45,125,255,0.08) 100%);
+            border: 1px solid rgba(45,125,255,0.3);
+            border-radius: 24px;
+            padding: 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .value-card::before {
+            content: '';
+            position: absolute;
+            top: -100px; left: 50%;
+            transform: translateX(-50%);
+            width: 500px; height: 300px;
+            background: radial-gradient(ellipse, rgba(45,125,255,0.2) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .value-headline {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.6rem, 4vw, 2.6rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        .value-headline .accent { color: var(--electric); }
+
+        .value-sub {
+            margin-top: 1.2rem;
+            color: var(--muted);
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        .value-steps {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .vstep {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            width: 160px;
+        }
+        .vstep-num {
+            width: 48px; height: 48px;
+            background: var(--electric);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 0 20px rgba(45,125,255,0.4);
+        }
+        .vstep-label { font-size: 0.85rem; color: var(--ice); text-align: center; line-height: 1.4; }
+
+        .vstep-connector {
+            align-self: center;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--electric), transparent);
+            margin-top: -2.4rem;
+            flex-shrink: 0;
+        }
+
+        /* ── CAPTURAS / GALERÍA ── */
+        #capturas { padding: 80px 6%; }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-top: 3rem;
+        }
+
+        .gallery-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            aspect-ratio: 16/10;
+            overflow: hidden;
+            position: relative;
+            transition: border-color 0.25s, transform 0.2s;
+            cursor: pointer;
+        }
+        .gallery-item:hover {
+            border-color: rgba(45,125,255,0.4);
+            transform: scale(1.02);
+        }
+
+        .gallery-mock {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        /* Mock screens */
+        .mock-topbar {
+            background: rgba(16,84,212,0.35);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .mock-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .mock-dot.r { background: #ff5f57; }
+        .mock-dot.y { background: #febc2e; }
+        .mock-dot.g { background: #28c840; }
+        .mock-title-bar { font-size: 0.65rem; color: var(--muted); margin-left: 4px; letter-spacing: 0.06em; }
+
+        .mock-content {
+            flex: 1;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .mock-row { height: 10px; background: rgba(45,125,255,0.15); border-radius: 4px; }
+        .mock-row.w60 { width: 60%; }
+        .mock-row.w80 { width: 80%; }
+        .mock-row.w40 { width: 40%; }
+        .mock-row.w100 { width: 100%; }
+
+        .mock-table { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+        .mock-tr { display: flex; gap: 6px; }
+        .mock-td { height: 8px; background: rgba(45,125,255,0.1); border-radius: 3px; flex: 1; }
+        .mock-td.blue { background: rgba(45,125,255,0.35); }
+
+        .mock-nfc-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 14px;
+        }
+        .mock-nfc-icon {
+            width: 54px; height: 54px;
+            border-radius: 50%;
+            background: rgba(45,125,255,0.18);
+            border: 2px solid rgba(45,125,255,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sky);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .mock-nfc-text { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.06em; }
+
+        /* ── DESCARGA ── */
+        #descarga { padding: 80px 6% 100px; }
+
+        .download-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 2rem;
+            align-items: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .download-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.6rem;
+        }
+        .download-body { color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+
+        .req-list {
+            list-style: none;
+            margin-top: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .req-list li {
+            font-size: 0.82rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .req-list li::before {
+            content: '·';
+            color: var(--electric);
+            font-size: 1.2rem;
+            line-height: 0;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 2rem 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+        .footer-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--white);
+        }
+        .footer-logo span { color: var(--electric); }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .product-grid,
+            .parts-grid,
+            .gallery-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+            .download-box { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .stats { gap: 2rem; }
+            .value-steps { gap: 1rem; }
+            .vstep-connector { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a href="#inicio" class="nav-logo">Entro<span>Ya</span></a>
+    <ul class="nav-links">
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#producto">Producto</a></li>
+        <li><a href="#partes">Módulos</a></li>
+        <li><a href="#capturas">Capturas</a></li>
+        <li><a href="#descarga" class="nav-cta">Descargar demo</a></li>
+    </ul>
+</nav>
+
+<!-- HERO -->
+<section id="inicio">
+    <div class="badge">
+        <span class="badge-dot"></span>
+        Demo disponible · Proyecto de DAM
+    </div>
+
+    <h1>Fichar nunca fue<br><span class="accent">tan fácil</span></h1>
+
+    <p class="hero-sub">
+        Acerca tu tarjeta NFC y listo. Sin botones, sin apps que abrir, sin contraseñas.
+        EntroYa registra tu entrada o salida al instante.
+    </p>
+
+    <div class="hero-actions">
+        <a href="#descarga" class="btn-primary">Descargar demo</a>
+        <a href="#producto" class="btn-secondary">Ver el producto</a>
+    </div>
+
+    <!-- NFC Animation -->
+    <div class="nfc-visual">
+        <div class="nfc-rings">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+        </div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+            <div class="nfc-card">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+                    <path d="M20 7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/>
+                    <path d="M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+                </svg>
+                <span class="nfc-card-label">NFC · EntroYa</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STATS -->
+<div class="stats reveal">
+    <div class="stat-item">
+        <div class="stat-num">0s</div>
+        <div class="stat-label">Tiempo de fichaje</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Plataformas integradas</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">NFC</div>
+        <div class="stat-label">Tecnología sin contacto</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Sin papel ni pulsadores</div>
+    </div>
+</div>
+
+<!-- PRODUCTO -->
+<section id="producto">
+    <div class="product-grid">
+        <div>
+            <p class="section-label reveal">El producto</p>
+            <h2 class="section-title reveal">Diseñado para el mundo real</h2>
+            <p class="section-body reveal">
+                EntroYa es una solución completa de control de presencia pensada para que
+                el trabajador <strong>no tenga que hacer nada</strong>. Solo acercar la tarjeta.
+                El administrador, por su parte, gestiona todo desde una webapp intuitiva.
+            </p>
+            <p class="section-body reveal" style="margin-top:0.8rem;">
+                La competencia pide que el empleado abra una app, pulse un botón y confirme.
+                Con EntroYa, el único gesto es aproximar la tarjeta NFC al móvil Android de la empresa.
+            </p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feat-card reveal">
+                <div class="feat-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                </div>
+                <div class="feat-title">Fichaje instantáneo</div>
+                <div class="feat-body">Un solo gesto. Cero pasos extra. Tecnología NFC nativa de Android.</div>
+            </div>
+            <div class="feat-card reveal">
+                <div class="feat-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                </div>
+                <div class="feat-title">Panel de administración</div>
+                <div class="feat-body">Webapp completa para gestionar trabajadores, horarios y nóminas.</div>
+            </div>
+            <div class="feat-card reveal">
+                <div class="feat-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div class="feat-title">Historial de fichajes</div>
+                <div class="feat-body">El trabajador consulta su historial completo desde cualquier dispositivo.</div>
+            </div>
+            <div class="feat-card reveal">
+                <div class="feat-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="feat-title">Justificantes y nóminas</div>
+                <div class="feat-body">Sube justificantes, descarga nóminas. Todo centralizado en la plataforma.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MÓDULOS / PARTES -->
+<section id="partes">
+    <div style="text-align:center;">
+        <p class="section-label reveal">Arquitectura</p>
+        <h2 class="section-title reveal" style="max-width:100%;text-align:center;">Dos módulos, una solución</h2>
+    </div>
+
+    <div class="parts-grid">
+        <!-- Módulo Android -->
+        <div class="part-card reveal">
+            <span class="part-tag">App Android nativa</span>
+            <h3 class="part-title">Módulo de fichajes NFC</h3>
+            <p class="part-body">
+                Aplicación Android instalada en el dispositivo de control de la empresa.
+                Detecta automáticamente la tarjeta NFC del trabajador y registra el fichaje
+                sin necesidad de ninguna interacción adicional.
+            </p>
+            <ul class="part-list">
+                <li>Lectura NFC en segundo plano, sin abrir la app</li>
+                <li>Registro instantáneo de entradas y salidas</li>
+                <li>Sincronización en tiempo real con el servidor</li>
+                <li>Funciona sin conexión y sincroniza al recuperarla</li>
+            </ul>
+        </div>
+
+        <!-- Módulo Web -->
+        <div class="part-card reveal">
+            <span class="part-tag">Aplicación web</span>
+            <h3 class="part-title">Portal de gestión y empleados</h3>
+            <p class="part-body">
+                Webapp responsiva accesible desde cualquier navegador. Dos roles diferenciados:
+                administrador con control total y trabajador con acceso a su propia información.
+            </p>
+            <ul class="part-list">
+                <li>Gestión de trabajadores, horarios y turnos</li>
+                <li>Consulta del historial personal de fichajes</li>
+                <li>Descarga y visualización de nóminas</li>
+                <li>Subida de justificantes de ausencia</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- PROPUESTA DE VALOR -->
+<section id="valor">
+    <div class="value-card reveal">
+        <p class="section-label" style="text-align:center;">¿Por qué EntroYa?</p>
+        <h2 class="value-headline">
+            Con EntroYa fichás en <span class="accent">un solo gesto</span>,<br>sin botones ni contraseñas
+        </h2>
+        <p class="value-sub">
+            La competencia te pide abrir la app, identificarte y confirmar. Nosotros solo pedimos
+            que acerques tu tarjeta. Así de sencillo.
+        </p>
+
+        <div class="value-steps">
+            <div class="vstep">
+                <div class="vstep-num">1</div>
+                <div class="vstep-label">Recibe tu tarjeta NFC de empresa</div>
+            </div>
+            <div class="vstep-connector"></div>
+            <div class="vstep">
+                <div class="vstep-num">2</div>
+                <div class="vstep-label">Acércala al dispositivo al llegar</div>
+            </div>
+            <div class="vstep-connector"></div>
+            <div class="vstep">
+                <div class="vstep-num">3</div>
+                <div class="vstep-label">Fichaje registrado automáticamente</div>
+            </div>
+            <div class="vstep-connector"></div>
+            <div class="vstep">
+                <div class="vstep-num">4</div>
+                <div class="vstep-label">Consulta tu historial desde la web</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CAPTURAS -->
+<section id="capturas">
+    <div style="text-align:center;">
+        <p class="section-label reveal">Galería</p>
+        <h2 class="section-title reveal" style="max-width:100%;text-align:center;">El producto en acción</h2>
+    </div>
+
+    <div class="gallery-grid" style="margin-top:3rem;">
+        <!-- Screen 1: App NFC -->
+        <div class="gallery-item reveal">
+            <div class="gallery-mock">
+                <div class="mock-topbar">
+                    <span class="mock-dot r"></span>
+                    <span class="mock-dot y"></span>
+                    <span class="mock-dot g"></span>
+                    <span class="mock-title-bar">EntroYa · Android</span>
+                </div>
+                <div class="gallery-item reveal">
+                    <img src="/img/android.png" alt="App NFC" style="width:100%; height:100%; object-fit:cover; border-radius:16px;" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Dashboard admin -->
+        <div class="gallery-item reveal">
+            <div class="gallery-mock">
+                <div class="mock-topbar">
+                    <span class="mock-dot r"></span>
+                    <span class="mock-dot y"></span>
+                    <span class="mock-dot g"></span>
+                    <span class="mock-title-bar">Panel administrador</span>
+                </div>
+                <div class="gallery-item reveal">
+                    <img src="/img/panel.png" alt="Dashboard admin" style="width:100%; height:100%; object-fit:cover; border-radius:16px;" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Historial trabajador -->
+        <div class="gallery-item reveal">
+            <div class="gallery-mock">
+                <div class="mock-topbar">
+                    <span class="mock-dot r"></span>
+                    <span class="mock-dot y"></span>
+                    <span class="mock-dot g"></span>
+                    <span class="mock-title-bar">Historial de fichajes</span>
+                </div>
+                <div class="gallery-item reveal">
+                    <img src="/img/historial.png" alt="Historial trabajador" style="width:100%; height:100%; object-fit:cover; border-radius:16px;" />
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- DESCARGA -->
+<section id="descarga">
+    <div class="download-box reveal">
+        <div>
+            <p class="section-label">Descarga</p>
+            <h2 class="download-title">Prueba la demo de EntroYa</h2>
+            <p class="download-body">
+                Disponible la APK de la app Android y acceso a la webapp de demostración.
+                Explora todas las funcionalidades de la plataforma en un entorno de pruebas.
+            </p>
+            <ul class="req-list">
+                <li>Android 10 o superior con NFC habilitado</li>
+                <li>Navegador moderno para la webapp (Chrome, Firefox, Safari)</li>
+                <li>Conexión a internet para sincronización</li>
+                <li>Versión demo · no comercial · proyecto educativo</li>
+            </ul>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1rem;flex-shrink:0;">
+            <a href="/files/EntroYa.apk" class="btn-primary" style="text-align:center;white-space:nowrap;">
+                Descargar APK
+            </a>
+            <a href="/" class="btn-secondary" style="text-align:center;white-space:nowrap;">
+                Abrir webapp demo
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <span class="footer-logo">Entro<span>Ya</span></span>
+    <span>Creado por el equipo EntroYa · Proyecto DAM · Demo pública</span>
+    <span>EntroYa · Control de presencia por NFC</span>
+</footer>
+
+<script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach((e, i) => {
+            if (e.isIntersecting) {
+                setTimeout(() => e.target.classList.add('visible'), i * 60);
+                observer.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+
+    // Nav active link highlight
+    const sections = document.querySelectorAll('section[id]');
+    const links = document.querySelectorAll('.nav-links a');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(s => {
+            if (window.scrollY >= s.offsetTop - 100) current = s.id;
+        });
+        links.forEach(a => {
+            a.style.color = a.getAttribute('href') === '#' + current ? 'var(--white)' : '';
+        });
+    });
+</script>
+</body>
+</html>

@@ -10,4 +10,5 @@ public interface JustificanteRepository extends JpaRepository<Justificante, Long
     List<Justificante> findByUsuario(Usuario usuario);
     List<Justificante> findByEstado(EstadoJustificante estado);
     List<Justificante> findByUsuarioAndEstado(Usuario usuario, EstadoJustificante estado);
+    long countByEstado(EstadoJustificante estado);
 }

@@ -75,28 +75,71 @@ public class TrabajadorController {
     public Map<String, Object> getResumenSemanal(@PathVariable Long usuarioId) {
         Map<String, Object> response = new HashMap<>();
         try {
-            Usuario usuario = usuarioRepository.findById(usuarioId)
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-            // Calcular inicio de la semana (lunes)
+            // Obtener inicio y fin de la semana actual (lunes a domingo)
             LocalDate hoy = LocalDate.now();
-            LocalDate inicioSemana = hoy.with(DayOfWeek.MONDAY);
+            LocalDate inicioSemana = hoy.with(java.time.DayOfWeek.MONDAY);
+            LocalDate finSemana = hoy.with(java.time.DayOfWeek.SUNDAY);
+
             LocalDateTime inicio = inicioSemana.atStartOfDay();
-            LocalDateTime fin = hoy.atTime(23, 59, 59);
+            LocalDateTime fin = finSemana.atTime(23, 59, 59);
 
-            List<Fichajes> registrosSemana = fichajeRepository.findByUsuarioAndFechaHoraBetween(usuario, inicio, fin);
+            // Obtener fichajes de esta semana
+            List<Fichajes> fichajesSemana = fichajeRepository
+                    .findByUsuarioIdAndFechaHoraBetweenOrderByFechaHoraAsc(usuarioId, inicio, fin);
 
-            // Calcular horas trabajadas (asumiendo pares entrada/salida)
-            double horasTotales = 0;
-            // ... lógica para agrupar por día y calcular diferencias ...
+            // Calcular horas trabajadas por dia
+            Map<LocalDate, List<Fichajes>> porDia = new java.util.LinkedHashMap<>();
+            for (Fichajes f : fichajesSemana) {
+                LocalDate fecha = f.getFechaHora().toLocalDate();
+                porDia.computeIfAbsent(fecha, k -> new java.util.ArrayList<>()).add(f);
+            }
+
+            long totalMinutos = 0;
+            int diasTrabajados = 0;
+
+            for (Map.Entry<LocalDate, List<Fichajes>> entry : porDia.entrySet()) {
+                List<Fichajes> del_dia = entry.getValue();
+                // Calcular tiempo trabajado: sumar pares ENTRADA-SALIDA
+                Fichajes ultimaEntrada = null;
+                long minutosDia = 0;
+                for (Fichajes f : del_dia) {
+                    if ("ENTRADA".equals(f.getTipo().name())) {
+                        ultimaEntrada = f;
+                    } else if ("SALIDA".equals(f.getTipo().name()) && ultimaEntrada != null) {
+                        long minutos = java.time.Duration.between(
+                                ultimaEntrada.getFechaHora(), f.getFechaHora()
+                        ).toMinutes();
+                        minutosDia += minutos;
+                        ultimaEntrada = null;
+                    }
+                }
+                if (minutosDia > 0) {
+                    totalMinutos += minutosDia;
+                    diasTrabajados++;
+                }
+            }
+
+            long horas = totalMinutos / 60;
+            long minutos = totalMinutos % 60;
+            String horasEstaSemana = horas + "h " + (minutos > 0 ? minutos + "m" : "");
+
+            long promMinutos = diasTrabajados > 0 ? totalMinutos / diasTrabajados : 0;
+            long promHoras = promMinutos / 60;
+            long promMin = promMinutos % 60;
+            String promedioDiario = promHoras + "h " + (promMin > 0 ? promMin + "m" : "");
 
             response.put("status", "success");
-            response.put("horasEstaSemana", String.format("%.2fh", horasTotales));
-            response.put("diasTrabajados", registrosSemana.stream().map(r -> r.getFechaHora().toLocalDate()).distinct().count());
-            response.put("promedioDiario", String.format("%.2fh", horasTotales / Math.max(1, (Integer) response.get("diasTrabajados"))));
+            response.put("horasEstaSemana", horasEstaSemana.trim());
+            response.put("diasTrabajados", diasTrabajados);
+            response.put("promedioDiario", promedioDiario.trim());
+            response.put("totalMinutos", totalMinutos);
+
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", e.getMessage());
+            response.put("horasEstaSemana", "0h");
+            response.put("diasTrabajados", 0);
+            response.put("promedioDiario", "0h");
         }
         return response;
     }

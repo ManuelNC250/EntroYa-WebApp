@@ -4,36 +4,17 @@ import Navbar from './Navbar';
 import { Toaster } from 'react-hot-toast';
 
 const Layout = () => {
-  return (
-    <>
-      <Navbar />
-      <main className="container-fluid mt-4">
-        <div className="container">
-          <Outlet />
+    return (
+        <div style={{ minHeight: '100vh', overflowX: 'hidden' }}>
+            <Navbar />
+            <main style={{ padding: '2rem 0 3rem', minHeight: 'calc(100vh - 64px)' }}>
+                <div className="container" style={{ padding: '0 16px' }}>
+                    <Outlet />
+                </div>
+            </main>
+            <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
         </div>
-      </main>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
-            duration: 3000,
-            iconTheme: {
-              primary: '#4ade80',
-              secondary: '#fff',
-            },
-          },
-          error: {
-            duration: 4000,
-          },
-        }}
-      />
-    </>
-  );
+    );
 };
 
 export default Layout;
