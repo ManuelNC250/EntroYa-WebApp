@@ -16,4 +16,5 @@ public interface FichajeRepository extends JpaRepository<Fichajes, Long> {
             LocalDateTime fin
     );
     long countByFechaHoraBetween(LocalDateTime inicio, LocalDateTime fin);
+    void deleteByUsuarioId(Long id);
 }

@@ -8,4 +8,5 @@ public interface TarjetaNfcRepository extends JpaRepository<TarjetaNfc, Long> {
     Optional<TarjetaNfc> findByUid(String uid);
     Optional<TarjetaNfc> findByUsuarioId(Long usuarioId);
     boolean existsByUid(String uid);
+    void deleteByUsuarioId(Long id);
 }

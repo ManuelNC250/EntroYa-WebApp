@@ -7,4 +7,5 @@ import java.util.List;
 public interface HorarioRepository extends JpaRepository<Horario, Long> {
     List<Horario> findByUsuarioId(Long usuarioId);
     List<Horario> findByActivoTrue();
+    void deleteByUsuarioId(Long id);
 }

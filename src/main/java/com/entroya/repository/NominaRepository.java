@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface NominaRepository extends JpaRepository<Nomina, Long> {
     List<Nomina> findByUsuarioId(Long usuarioId);
     Optional<Nomina> findByUsuarioIdAndMesAndAno(Long usuarioId, Integer mes, Integer ano);
+    void deleteByUsuarioId(Long id);
 }

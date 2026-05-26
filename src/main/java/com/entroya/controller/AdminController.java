@@ -6,6 +6,9 @@ import com.entroya.model.Usuario;
 import com.entroya.repository.FichajeRepository;
 import com.entroya.repository.JustificanteRepository;
 import com.entroya.repository.UsuarioRepository;
+import com.entroya.repository.NominaRepository;
+import com.entroya.repository.TarjetaNfcRepository;
+import com.entroya.repository.HorarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +36,12 @@ public class AdminController {
 
     @Autowired
     private JustificanteRepository justificanteRepository;
+    @Autowired
+    private NominaRepository nominaRepository;
+    @Autowired
+    private TarjetaNfcRepository tarjetaNfcRepository;
+    @Autowired
+    private HorarioRepository horarioRepository;
 
     @Transactional(readOnly = true)
     @GetMapping("/dashboard")
@@ -141,6 +150,7 @@ public class AdminController {
     }
 
     // Eliminar usuario
+    @Transactional
     @DeleteMapping("/usuarios/{id}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
@@ -150,7 +160,15 @@ public class AdminController {
                 response.put("message", "Usuario no encontrado");
                 return ResponseEntity.notFound().build();
             }
+
+            // Eliminar registros relacionados antes de eliminar el usuario
+            fichajeRepository.deleteByUsuarioId(id);
+            justificanteRepository.deleteByUsuarioId(id);
+            nominaRepository.deleteByUsuarioId(id);
+            horarioRepository.deleteByUsuarioId(id);
+            tarjetaNfcRepository.deleteByUsuarioId(id);
             usuarioRepository.deleteById(id);
+
             response.put("status", "success");
             response.put("message", "Usuario eliminado correctamente");
             return ResponseEntity.ok(response);
